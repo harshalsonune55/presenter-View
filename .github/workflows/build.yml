@@ -1,0 +1,37 @@
+name: Build apps
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install Pillow pymupdf==1.26.5 pyinstaller
+      - run: pyinstaller --noconfirm --onefile --windowed --name "Presenter View" --icon icon.ico presenter_notes.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Presenter-View-Windows
+          path: dist/Presenter View.exe
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install Pillow pymupdf==1.26.5 pyobjc-framework-Cocoa pyinstaller
+      - run: pyinstaller --noconfirm --windowed --name "Presenter View" --icon icon.icns --osx-bundle-identifier com.presenterview.app presenter_notes.py
+      - run: |
+          codesign --force --deep -s - "dist/Presenter View.app"
+          ditto -c -k --keepParent "dist/Presenter View.app" "Presenter View (Mac).zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Presenter-View-Mac
+          path: Presenter View (Mac).zip
